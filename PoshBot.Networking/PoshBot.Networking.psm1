@@ -89,12 +89,19 @@ function Invoke-TestPort {
         [string]$Port
     )
 
-    $r = Test-NetConnection -ComputerName $ComputerName -Port $Port -ErrorAction SilentlyContinue | Format-Table -Autosize | Out-String
-
+    if ($PSVersionTable.PSVersion.Major -ge 6) {
+        $r = Test-Connection -TargetName $ComputerName -TCPPort $Port -ErrorAction SilentlyContinue |
+                Select-Object @{Name ='ComputerName';Expression={$ComputerName}},@{Name='Port';Expression={$Port}},@{Name='Result';Expression={$_}} |
+                Format-Table -Autosize |
+                Out-String
+    }
+    else {
+        $r = Test-NetConnection -ComputerName $ComputerName -Port $Port -ErrorAction SilentlyContinue | Format-Table -Autosize | Out-String
+    }
     if ($r) {
         New-PoshBotCardResponse -Type Normal -Text $r
     } else {
-        New-PoshBotCardResponse -Type Warning -Text "Unable to resolve [$Name] :(" -Title 'Rut row' -ThumbnailUrl 'http://images4.fanpop.com/image/photos/17000000/Scooby-Doo-Where-Are-You-The-Original-Intro-scooby-doo-17020515-500-375.jpg'
+        New-PoshBotCardResponse -Type Warning -Text "Unable to resolve [$ComputerName] :(" -Title 'Rut row' -ThumbnailUrl 'http://images4.fanpop.com/image/photos/17000000/Scooby-Doo-Where-Are-You-The-Original-Intro-scooby-doo-17020515-500-375.jpg'
     }
 }
 
